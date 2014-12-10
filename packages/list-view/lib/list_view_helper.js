@@ -7,13 +7,13 @@ function testProp (prop) {
   var uppercaseProp = prop.charAt(0).toUpperCase() + prop.slice(1);
 
   var props = [
-  prop,
-  'webkit' + prop,
-  'webkit' + uppercaseProp,
-  'Moz'    + uppercaseProp,
-  'moz'    + uppercaseProp,
-  'ms'     + uppercaseProp,
-  'ms'     + prop
+    prop,
+    'webkit' + prop,
+    'webkit' + uppercaseProp,
+    'Moz'    + uppercaseProp,
+    'moz'    + uppercaseProp,
+    'ms'     + uppercaseProp,
+    'ms'     + prop
   ];
 
   for (var i=0; i < props.length; i++) {
@@ -27,7 +27,8 @@ function testProp (prop) {
   return null;
 }
 
-function browserTransform (attributeName, styleName) {
+function browserTransform (attributeName) {
+  var styleName = testProp(attributeName);
   var prefix = styleName.toLowerCase().replace(attributeName, '');
 
   var dic = {
@@ -43,7 +44,7 @@ function browserTransform (attributeName, styleName) {
   return styleName;
 }
 
-var transformProp = browserTransform('transform', testProp('transform'));
+var transformProp = browserTransform('transform');
 var perspectiveProp = testProp('perspective');
 var supports2D = transformProp !== null;
 var supports3D = perspectiveProp !== null;

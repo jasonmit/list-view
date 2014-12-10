@@ -18,17 +18,17 @@ var define, requireModule, require, requirejs;
   } else {
     _isArray = Array.isArray;
   }
-  
+
   var registry = {}, seen = {}, state = {};
   var FAILED = false;
 
   define = function(name, deps, callback) {
-  
+
     if (!_isArray(deps)) {
       callback = deps;
       deps     =  [];
     }
-  
+
     registry[name] = {
       deps: deps,
       callback: callback
@@ -457,13 +457,13 @@ define("list-view/list_view_helper",
       var uppercaseProp = prop.charAt(0).toUpperCase() + prop.slice(1);
 
       var props = [
-      prop,
-      'webkit' + prop,
-      'webkit' + uppercaseProp,
-      'Moz'    + uppercaseProp,
-      'moz'    + uppercaseProp,
-      'ms'     + uppercaseProp,
-      'ms'     + prop
+        prop,
+        'webkit' + prop,
+        'webkit' + uppercaseProp,
+        'Moz'    + uppercaseProp,
+        'moz'    + uppercaseProp,
+        'ms'     + uppercaseProp,
+        'ms'     + prop
       ];
 
       for (var i=0; i < props.length; i++) {
@@ -477,7 +477,8 @@ define("list-view/list_view_helper",
       return null;
     }
 
-    function browserTransform (attributeName, styleName) {
+    function browserTransform (attributeName) {
+      var styleName = testProp(attributeName);
       var prefix = styleName.toLowerCase().replace(attributeName, '');
 
       var dic = {
@@ -493,7 +494,7 @@ define("list-view/list_view_helper",
       return styleName;
     }
 
-    var transformProp = browserTransform('transform', testProp('transform'));
+    var transformProp = browserTransform('transform');
     var perspectiveProp = testProp('perspective');
     var supports2D = transformProp !== null;
     var supports3D = perspectiveProp !== null;
