@@ -1,6 +1,7 @@
 // TODO - remove this!
-var el = document.createElement('div'), style = el.style;
-var set = Ember.set;
+var el    = document.body || document.createElement('div');
+var style = el.style;
+var set   = Ember.set;
 
 function testProp (prop) {
   var uppercaseProp = prop.charAt(0).toUpperCase() + prop.slice(1);
@@ -9,10 +10,10 @@ function testProp (prop) {
   prop,
   'webkit' + prop,
   'webkit' + uppercaseProp,
-  'Moz' + uppercaseProp,
-  'moz' + uppercaseProp,
-  'ms' + uppercaseProp,
-  'ms' + prop
+  'Moz'    + uppercaseProp,
+  'moz'    + uppercaseProp,
+  'ms'     + uppercaseProp,
+  'ms'     + prop
   ];
 
   for (var i=0; i < props.length; i++) {
@@ -26,23 +27,23 @@ function testProp (prop) {
   return null;
 }
 
-function testAttribute (prop) {
-  var prefix = prop.toLowerCase().replace(prop, '');
+function browserTransform (attributeName, styleName) {
+  var prefix = styleName.toLowerCase().replace(attributeName, '');
 
   var dic = {
-    webkit: '-webkit-' + prop,
-    moz: '-moz-' + prop,
-    ms: '-ms-' + prop
+    webkit: '-webkit-' + attributeName,
+    moz: '-moz-' + attributeName,
+    ms: '-ms-' + attributeName
   };
 
   if (prefix && dic[prefix]) {
     return dic[prefix];
   }
 
-  return prop;
+  return styleName;
 }
 
-var transformProp = testProp('transform');
+var transformProp = browserTransform('transform', testProp('transform'));
 var perspectiveProp = testProp('perspective');
 var supports2D = transformProp !== null;
 var supports3D = perspectiveProp !== null;
@@ -52,7 +53,7 @@ export default {
   applyTransform: (function(){
     if (supports2D) {
       return function(childView, x, y){
-        set(childView, 'style', testAttribute(transformProp) + ': translate(' + x + 'px, ' + y + 'px);');
+        set(childView, 'style', transformProp + ': translate(' + x + 'px, ' + y + 'px);');
       };
     } else {
       return function(childView, x, y){
