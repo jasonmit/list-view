@@ -449,37 +449,27 @@ define("list-view/list_view_helper",
   function(__exports__) {
     "use strict";
     // TODO - remove this!
-    var el = document.createElement('div'), style = el.style;
-    var set = Ember.set;
+    var el    = document.body || document.createElement('div');
+    var style = el.style;
+    var set   = Ember.set;
 
     function testProp (prop) {
       var uppercaseProp = prop.charAt(0).toUpperCase() + prop.slice(1);
 
-      var dic = {
-        webkit: '-webkit-' + prop,
-        moz: '-moz-' + prop,
-        ms: 'ms' + uppercaseProp
-      };
-
       var props = [
-        prop,
-        'webkit' + prop,
-        'webkit' + uppercaseProp,
-        'Moz' + uppercaseProp,
-        'moz' + uppercaseProp,
-        'ms' + uppercaseProp,
-        'ms' + prop
+      prop,
+      'webkit' + prop,
+      'webkit' + uppercaseProp,
+      'Moz'    + uppercaseProp,
+      'moz'    + uppercaseProp,
+      'ms'     + uppercaseProp,
+      'ms'     + prop
       ];
 
       for (var i=0; i < props.length; i++) {
         var property = props[i];
-        var prefix;
 
         if (property in style) {
-          prefix = property.toLowerCase().replace(prop, '');
-          if (prefix && dic[prefix]) {
-            return dic[prefix];
-          }
           return property;
         }
       }
@@ -487,7 +477,23 @@ define("list-view/list_view_helper",
       return null;
     }
 
-    var transformProp = testProp('transform');
+    function browserTransform (attributeName, styleName) {
+      var prefix = styleName.toLowerCase().replace(attributeName, '');
+
+      var dic = {
+        webkit: '-webkit-' + attributeName,
+        moz: '-moz-' + attributeName,
+        ms: '-ms-' + attributeName
+      };
+
+      if (prefix && dic[prefix]) {
+        return dic[prefix];
+      }
+
+      return styleName;
+    }
+
+    var transformProp = browserTransform('transform', testProp('transform'));
     var perspectiveProp = testProp('perspective');
     var supports2D = transformProp !== null;
     var supports3D = perspectiveProp !== null;
