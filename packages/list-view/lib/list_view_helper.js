@@ -5,36 +5,41 @@ var set = Ember.set;
 function testProp (prop) {
   var uppercaseProp = prop.charAt(0).toUpperCase() + prop.slice(1);
 
-  var dic = {
-    webkit: '-webkit-' + prop,
-    moz: '-moz-' + prop,
-    ms: 'ms' + uppercaseProp
-  };
-
   var props = [
-    prop,
-    'webkit' + prop,
-    'webkit' + uppercaseProp,
-    'Moz' + uppercaseProp,
-    'moz' + uppercaseProp,
-    'ms' + uppercaseProp,
-    'ms' + prop
+  prop,
+  'webkit' + prop,
+  'webkit' + uppercaseProp,
+  'Moz' + uppercaseProp,
+  'moz' + uppercaseProp,
+  'ms' + uppercaseProp,
+  'ms' + prop
   ];
 
   for (var i=0; i < props.length; i++) {
     var property = props[i];
-    var prefix;
 
     if (property in style) {
-      prefix = property.toLowerCase().replace(prop, '');
-      if (prefix && dic[prefix]) {
-        return dic[prefix];
-      }
       return property;
     }
   }
 
   return null;
+}
+
+function testAttribute (prop) {
+  var prefix = prop.toLowerCase().replace(prop, '');
+
+  var dic = {
+    webkit: '-webkit-' + prop,
+    moz: '-moz-' + prop,
+    ms: '-ms-' + prop
+  };
+
+  if (prefix && dic[prefix]) {
+    return dic[prefix];
+  }
+
+  return prop;
 }
 
 var transformProp = testProp('transform');
@@ -47,7 +52,7 @@ export default {
   applyTransform: (function(){
     if (supports2D) {
       return function(childView, x, y){
-        set(childView, 'style', transformProp + ': translate(' + x + 'px, ' + y + 'px);');
+        set(childView, 'style', testAttribute(transformProp) + ': translate(' + x + 'px, ' + y + 'px);');
       };
     } else {
       return function(childView, x, y){
