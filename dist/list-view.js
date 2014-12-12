@@ -18,17 +18,17 @@ var define, requireModule, require, requirejs;
   } else {
     _isArray = Array.isArray;
   }
-
+  
   var registry = {}, seen = {}, state = {};
   var FAILED = false;
 
   define = function(name, deps, callback) {
-
+  
     if (!_isArray(deps)) {
       callback = deps;
       deps     =  [];
     }
-
+  
     registry[name] = {
       deps: deps,
       callback: callback
@@ -186,7 +186,7 @@ define("list-view/list_item_view",
       @namespace Ember
     */
     __exports__["default"] = Ember.View.extend(ListItemViewMixin, {
-      updateContext: function(newContext){
+      updateContext: function(newContext) {
         var context = get(this, 'context');
 
         Ember.instrument('view.updateContext.render', this, function() {
@@ -200,8 +200,7 @@ define("list-view/list_item_view",
       },
 
       rerender: function () {
-        // todo: work around for tests.  investigate a real fix.
-        if(get(this, 'isDestroying') || get(this, 'isDestroyed')) {
+        if (this.isDestroying || this.isDestroyed) {
           return;
         }
 
@@ -250,7 +249,7 @@ define("list-view/list_item_view_mixin",
 
     var TransformMixin = Ember.Mixin.create({
       style: '',
-      attributeBindings: ['style'],
+      attributeBindings: ['style']
     });
     __exports__.TransformMixin = TransformMixin;
     __exports__["default"] = Ember.Mixin.create(TransformMixin, {
@@ -258,11 +257,9 @@ define("list-view/list_item_view_mixin",
       classNames: ['ember-list-item-view'],
       _positionElement: positionElement,
 
-      init: function(){
-        this._super();
-
+      positionElementWhenInserted: Ember.on('init', function(){
         this.one('didInsertElement', positionElement);
-      },
+      }),
 
       updatePosition: function(position) {
         this.position = position;
@@ -453,17 +450,17 @@ define("list-view/list_view_helper",
     var style = el.style;
     var set   = Ember.set;
 
-    function testProp (prop) {
+    function getElementStyle (prop) {
       var uppercaseProp = prop.charAt(0).toUpperCase() + prop.slice(1);
 
       var props = [
-        prop,
-        'webkit' + prop,
-        'webkit' + uppercaseProp,
-        'Moz'    + uppercaseProp,
-        'moz'    + uppercaseProp,
-        'ms'     + uppercaseProp,
-        'ms'     + prop
+      prop,
+      'webkit' + prop,
+      'webkit' + uppercaseProp,
+      'Moz'    + uppercaseProp,
+      'moz'    + uppercaseProp,
+      'ms'     + uppercaseProp,
+      'ms'     + prop
       ];
 
       for (var i=0; i < props.length; i++) {
@@ -477,14 +474,14 @@ define("list-view/list_view_helper",
       return null;
     }
 
-    function browserTransform (attributeName) {
-      var styleName = testProp(attributeName);
-      var prefix = styleName.toLowerCase().replace(attributeName, '');
+    function getCSSStyle (attr) {
+      var styleName = getElementStyle(attr);
+      var prefix    = styleName.toLowerCase().replace(attr, '');
 
       var dic = {
-        webkit: '-webkit-' + attributeName,
-        moz: '-moz-' + attributeName,
-        ms: '-ms-' + attributeName
+        webkit: '-webkit-' + attr,
+        moz:    '-moz-' + attr,
+        ms:     '-ms-' + attr
       };
 
       if (prefix && dic[prefix]) {
@@ -494,38 +491,50 @@ define("list-view/list_view_helper",
       return styleName;
     }
 
-    var transformProp = browserTransform('transform');
-    var perspectiveProp = testProp('perspective');
-    var supports2D = transformProp !== null;
-    var supports3D = perspectiveProp !== null;
+    var styleAttributeName = getElementStyle('transform');
+    var transformProp      = getCSSStyle('transform');
+    var perspectiveProp    = getElementStyle('perspective');
+    var supports2D         = !!transformProp;
+    var supports3D         = !!perspectiveProp;
+
+    function setStyle (optionalStyleString) {
+      return function (obj, x, y) {
+        var isElement = obj instanceof Element;
+
+        if (optionalStyleString && (supports2D || supports3D)) {
+          var style = Ember.String.fmt(optionalStyleString, x, y);
+
+          if (isElement) {
+            obj.style[styleAttributeName] = style;
+          } else {
+            set(obj, 'style', transformProp + ': ' + style);
+          }
+        } else {
+          if (isElement) {
+            obj.style.top = y;
+            obj.style.left = x;
+          }
+        }
+      };
+    }
 
     __exports__["default"] = {
       transformProp: transformProp,
-      applyTransform: (function(){
+      applyTransform: (function () {
         if (supports2D) {
-          return function(childView, x, y){
-            set(childView, 'style', transformProp + ': translate(' + x + 'px, ' + y + 'px);');
-          };
-        } else {
-          return function(childView, x, y){
-            set(childView, 'style', 'top: ' + y + 'px; left: ' + x + 'px;');
-          };
+          return setStyle('translate(%@px, %@px)');
         }
+
+        return setStyle();
       })(),
-      apply3DTransform: (function(){
+      apply3DTransform: (function () {
         if (supports3D) {
-          return function(childView, x, y){
-            set(childView, 'style', transformProp + ': translate3d(' + x + 'px, ' + y + 'px, 0);');
-          };
+          return setStyle('translate3d(%@px, %@px, 0)');
         } else if (supports2D) {
-          return function(childView, x, y){
-            set(childView, 'style', transformProp + ': translate(' + x + 'px, ' + y + 'px);');
-          };
-        } else {
-          return function(childView, x, y){
-            set(childView, 'style', 'top: ' + y + 'px; left: ' + x + 'px;');
-          };
+          return setStyle('translate(%@px, %@px)');
         }
+
+        return setStyle();
       })()
     };
   });
@@ -1627,17 +1636,16 @@ define("list-view/virtual_list_scroller_events",
     }
   });
 define("list-view/virtual_list_view",
-  ["list-view/list_view_mixin","list-view/list_item_view_mixin","list-view/list_view_helper","list-view/virtual_list_scroller_events","exports"],
-  function(__dependency1__, __dependency2__, __dependency3__, __dependency4__, __exports__) {
+  ["list-view/list_view_mixin","list-view/list_view_helper","list-view/virtual_list_scroller_events","exports"],
+  function(__dependency1__, __dependency2__, __dependency3__, __exports__) {
     "use strict";
     /*
       global Scroller
     */
 
     var ListViewMixin = __dependency1__["default"];
-    var TransformMixin = __dependency2__.TransformMixin;
-    var ListViewHelper = __dependency3__["default"];
-    var VirtualListScrollerEvents = __dependency4__["default"];
+    var ListViewHelper = __dependency2__["default"];
+    var VirtualListScrollerEvents = __dependency3__["default"];
 
     var max = Math.max, get = Ember.get, set = Ember.set;
 
@@ -1713,15 +1721,14 @@ define("list-view/virtual_list_view",
         this._activateScrollerPullToRefresh();
       },
       _insertPullToRefreshView: function(){
-        var pulldownClass = this.pullToRefreshViewClass.extend(TransformMixin);
-        this.pullToRefreshView = this.createChildView(pulldownClass);
+        this.pullToRefreshView = this.createChildView(this.pullToRefreshViewClass);
         this.insertAt(0, this.pullToRefreshView);
 
         var view = this;
 
-        this.pullToRefreshView.on('didInsertElement', function(){
-          Ember.run.schedule('afterRender', this, function(){
-            view.applyTransform(this, 0, -1 * view.pullToRefreshViewHeight);
+        this.pullToRefreshView.on('didInsertElement', function() {
+          Ember.run.scheduleOnce('afterRender', this, function(){
+            view.applyTransform(get(this, 'element'), 0, -1 * view.pullToRefreshViewHeight);
           });
         });
       },
